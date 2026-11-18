@@ -1,0 +1,15 @@
+# Baseline: ResNet-50 at 224 px (classic CNN to compare against).
+base: default.yaml
+run_name: resnet50_224
+
+data:
+  img_size: 224
+
+model:
+  name: resnet50.a1_in1k
+  drop_path_rate: 0.05
+
+train:
+  batch_size: 64
+  lr: 3.0e-4
+  weight_decay: 0.01

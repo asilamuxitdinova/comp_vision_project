@@ -1,0 +1,18 @@
+# Vision Transformer: DINOv2 ViT-B/14 (self-supervised pretraining) at 392 px.
+# 392 is a multiple of the 14 px patch size.
+base: default.yaml
+run_name: dinov2_vitb_392
+
+data:
+  img_size: 392
+
+model:
+  name: vit_base_patch14_dinov2.lvd142m
+  drop_rate: 0.1
+  drop_path_rate: 0.1
+
+train:
+  batch_size: 16
+  lr: 2.0e-5
+  weight_decay: 0.05
+  warmup_epochs: 3

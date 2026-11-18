@@ -1,0 +1,35 @@
+# Default experiment: ConvNeXt-Tiny (ImageNet-22k pretrained) at 384 px.
+# Other configs inherit from this file with `base: default.yaml` and override keys.
+# Any key can also be overridden from the command line, e.g.
+#   python -m src.train --config configs/default.yaml --set train.lr=5e-5 train.epochs=40
+
+seed: 42
+run_name: convnext_tiny_384     # outputs go to outputs/<run_name>/
+
+data:
+  processed_dir: data/processed
+  img_size: 384
+  num_workers: 8                # set to the number of CPU cores on the server
+
+model:
+  name: convnext_tiny.fb_in22k_ft_in1k   # any timm model name
+  pretrained: true
+  drop_rate: 0.2
+  drop_path_rate: 0.1
+
+train:
+  epochs: 30
+  batch_size: 32
+  lr: 1.0e-4
+  weight_decay: 0.05
+  warmup_epochs: 2
+  label_smoothing: 0.1
+  class_weights: sqrt_inverse   # none | inverse | sqrt_inverse  (handles class imbalance)
+  amp: bf16                     # bf16 | fp16 | none  (bf16 is best on the L4)
+  grad_clip: 1.0
+  early_stopping_patience: 7
+  monitor: balanced_accuracy    # metric on val used to pick the best epoch
+
+eval:
+  tta: true                     # average predictions over original + flipped image
+  gradcam_images: 24            # number of test images to visualize with Grad-CAM (0 = off)

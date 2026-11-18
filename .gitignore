@@ -1,0 +1,17 @@
+# Data and results are too big (and licensed); never push them
+data/
+outputs/
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
