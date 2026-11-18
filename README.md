@@ -14,6 +14,9 @@ Classifies smartphone photos of skin lesions into 6 diagnoses with transfer lear
 
 > This is a course project. It is not a medical device and must not be used for diagnosis.
 
+**Results:** ConvNeXt-Tiny reaches 79.3% accuracy and 74.5% balanced accuracy on held-out
+patients. See [RESULTS.md](RESULTS.md) for the model comparison, GPU usage and discussion.
+
 ## Project layout
 
 ```
