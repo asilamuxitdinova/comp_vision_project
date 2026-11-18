@@ -27,6 +27,7 @@ scripts/
   download_data.py       downloads PAD-UFES-20 (Hugging Face mirror or official Mendeley)
   prepare_data.py        resizes images, makes patient-level stratified splits
   compare_runs.py        collects test metrics of all runs into one table
+  plot_gpu_log.py        GPU-usage chart + summary from an nvidia-smi log
 src/
   data.py                Dataset, augmentations, loaders, class weights
   model.py               timm model builder
@@ -77,6 +78,22 @@ for k in 0 1 2 3 4; do python -m src.train --config configs/default.yaml --fold 
 python -m src.evaluate --checkpoint outputs/convnext_tiny_384/best.pt --gradcam 36
 python -m src.evaluate --checkpoint outputs/convnext_tiny_384/best.pt --no-tta
 ```
+
+### GPU usage chart
+
+Record GPU stats once per second in a separate tmux session while training runs,
+then turn the log into a chart and summary (mean utilization, peak memory, power, energy):
+
+```bash
+tmux new -s gpu
+nvidia-smi --query-gpu=timestamp,utilization.gpu,memory.used,memory.total,power.draw,temperature.gpu \
+  --format=csv -l 1 | tee outputs/gpu_log_convnext.csv
+# Ctrl-c when training is done, then:
+python scripts/plot_gpu_log.py outputs/gpu_log_convnext.csv --title "ConvNeXt-Tiny @ 384 px on NVIDIA L4"
+```
+
+This writes `outputs/gpu_log_convnext.png` and `outputs/gpu_log_convnext_summary.json`.
+Use one log per model to compare their GPU cost.
 
 If data loading is the bottleneck (GPU utilization in `nvidia-smi` well below 90%), set
 `data.num_workers` to the number of CPU cores (`nproc`).
