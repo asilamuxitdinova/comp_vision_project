@@ -150,7 +150,15 @@ def main():
     hist = pd.DataFrame(history)
     plot_history(hist, monitor, out / "training_curves.png")
     best_row = hist.loc[hist[f"val_{monitor}"].idxmax()]
-    save_json({"best_epoch": int(best_row["epoch"]), f"best_val_{monitor}": best}, out / "train_summary.json")
+    save_json({
+        "best_epoch": int(best_row["epoch"]),
+        f"best_val_{monitor}": best,
+        "best_val_metrics": {k[4:]: float(v) for k, v in best_row.items() if k.startswith("val_")},
+        "epochs_run": len(hist),
+        "train_time_min": float(hist["time_s"].sum() / 60),
+        "params_m": sum(p.numel() for p in model.parameters()) / 1e6,
+        "fold": args.fold,
+    }, out / "train_summary.json")
     print(f"\nBest val {monitor} {best:.4f} at epoch {int(best_row['epoch'])}. Checkpoint: {out / 'best.pt'}")
 
     if not args.no_test:

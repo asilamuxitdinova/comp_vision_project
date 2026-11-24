@@ -31,6 +31,13 @@ scripts/
   prepare_data.py        resizes images, makes patient-level stratified splits
   compare_runs.py        collects test metrics of all runs into one table
   plot_gpu_log.py        GPU-usage chart + summary from an nvidia-smi log
+  run_cv.sh              5-fold cross-validation with GPU logging, summary and export
+  summarize_cv.py        mean ± std over CV folds + fold-ensemble on the test set
+  collect_results.py     copies metrics/plots/logs (no checkpoints) into results/
+report/
+  paper.typ, refs.yml    4-page report source (Typst); report.pdf is the compiled paper
+  make_figures.py        builds report/figures/ from results/
+results/                 experimental results (metrics, plots, GPU logs), tracked in git
 src/
   data.py                Dataset, augmentations, loaders, class weights
   model.py               timm model builder
@@ -74,12 +81,21 @@ python -m src.train --set train.epochs=2 run_name=smoke
 # override any config value from the command line
 python -m src.train --config configs/default.yaml --set train.lr=5e-5 train.epochs=40 run_name=cnx_lr5e-5
 
-# 5-fold cross-validation (test set stays the same held-out patients)
-for k in 0 1 2 3 4; do python -m src.train --config configs/default.yaml --fold $k; done
+# 5-fold cross-validation with GPU logging, summary (mean ± std, fold ensemble) and export to results/
+bash scripts/run_cv.sh
 
 # re-evaluate a checkpoint (e.g. more Grad-CAM images, or without test-time augmentation)
 python -m src.evaluate --checkpoint outputs/convnext_tiny_384/best.pt --gradcam 36
 python -m src.evaluate --checkpoint outputs/convnext_tiny_384/best.pt --no-tta
+```
+
+### Building the report
+
+```bash
+python scripts/collect_results.py          # on the server: outputs/ -> results/ (no checkpoints)
+pip install typst
+python report/make_figures.py              # results/ -> report/figures/
+python -c "import typst; typst.compile('report/paper.typ', output='report/report.pdf')"
 ```
 
 ### GPU usage chart

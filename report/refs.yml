@@ -1,0 +1,152 @@
+pacheco2020:
+  type: article
+  title: "PAD-UFES-20: A skin lesion dataset composed of patient data and clinical images collected from smartphones"
+  author: ["Pacheco, Andre G. C.", "Lima, Gustavo R.", "Salomão, Amanda S.", "Krohling, Breno", "Biral, Igor P.", "de Angelo, Gabriel G.", "Alves Jr., Fábio C. R.", "Krohling, Renato A."]
+  date: 2020
+  parent:
+    type: periodical
+    title: Data in Brief
+    volume: 32
+  page-range: "106221"
+  serial-number:
+    doi: "10.1016/j.dib.2020.106221"
+
+pacheco2020impact:
+  type: article
+  title: "The impact of patient clinical information on automated skin cancer detection"
+  author: ["Pacheco, Andre G. C.", "Krohling, Renato A."]
+  date: 2020
+  parent:
+    type: periodical
+    title: Computers in Biology and Medicine
+    volume: 116
+  page-range: "103545"
+
+pacheco2021metablock:
+  type: article
+  title: "An attention-based mechanism to combine images and metadata in deep learning models applied to skin cancer classification"
+  author: ["Pacheco, Andre G. C.", "Krohling, Renato A."]
+  date: 2021
+  parent:
+    type: periodical
+    title: IEEE Journal of Biomedical and Health Informatics
+    volume: 25
+    issue: 9
+  page-range: "3554–3563"
+
+esteva2017:
+  type: article
+  title: "Dermatologist-level classification of skin cancer with deep neural networks"
+  author: ["Esteva, Andre", "Kuprel, Brett", "Novoa, Roberto A.", "Ko, Justin", "Swetter, Susan M.", "Blau, Helen M.", "Thrun, Sebastian"]
+  date: 2017
+  parent:
+    type: periodical
+    title: Nature
+    volume: 542
+  page-range: "115–118"
+
+tschandl2018:
+  type: article
+  title: "The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented skin lesions"
+  author: ["Tschandl, Philipp", "Rosendahl, Cliff", "Kittler, Harald"]
+  date: 2018
+  parent:
+    type: periodical
+    title: Scientific Data
+    volume: 5
+  page-range: "180161"
+
+groh2021:
+  type: article
+  title: "Evaluating deep neural networks trained on clinical images in dermatology with the Fitzpatrick 17k dataset"
+  author: ["Groh, Matthew", "Harris, Caleb", "Soenksen, Luis", "Lau, Felix", "Han, Rachel", "Kim, Aerin", "Koochek, Arash", "Badri, Omar"]
+  date: 2021
+  parent:
+    type: proceedings
+    title: "Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)"
+
+daneshjou2022:
+  type: article
+  title: "Disparities in dermatology AI performance on a diverse, curated clinical image set"
+  author: ["Daneshjou, Roxana", "Vodrahalli, Kailas", "Novoa, Roberto A.", "Jenkins, Melissa", "Liang, Weixin", "Rotemberg, Veronica", "Ko, Justin", "Zou, James", "Chiou, Albert S."]
+  date: 2022
+  parent:
+    type: periodical
+    title: Science Advances
+    volume: 8
+    issue: 32
+  page-range: "eabq6147"
+
+he2016:
+  type: article
+  title: "Deep residual learning for image recognition"
+  author: ["He, Kaiming", "Zhang, Xiangyu", "Ren, Shaoqing", "Sun, Jian"]
+  date: 2016
+  parent:
+    type: proceedings
+    title: "Proc. IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+  page-range: "770–778"
+
+liu2022:
+  type: article
+  title: "A ConvNet for the 2020s"
+  author: ["Liu, Zhuang", "Mao, Hanzi", "Wu, Chao-Yuan", "Feichtenhofer, Christoph", "Darrell, Trevor", "Xie, Saining"]
+  date: 2022
+  parent:
+    type: proceedings
+    title: "Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)"
+  page-range: "11976–11986"
+
+dosovitskiy2021:
+  type: article
+  title: "An image is worth 16x16 words: Transformers for image recognition at scale"
+  author: ["Dosovitskiy, Alexey", "Beyer, Lucas", "Kolesnikov, Alexander", "Weissenborn, Dirk", "Zhai, Xiaohua", "Unterthiner, Thomas", "Dehghani, Mostafa", "Minderer, Matthias", "Heigold, Georg", "Gelly, Sylvain", "Uszkoreit, Jakob", "Houlsby, Neil"]
+  date: 2021
+  parent:
+    type: proceedings
+    title: "International Conference on Learning Representations (ICLR)"
+
+oquab2023:
+  type: article
+  title: "DINOv2: Learning robust visual features without supervision"
+  author: ["Oquab, Maxime", "Darcet, Timothée", "Moutakanni, Théo", "Vo, Huy", "Szafraniec, Marc", "Khalidov, Vasil", "Fernandez, Pierre", "Haziza, Daniel", "Massa, Francisco", "El-Nouby, Alaaeldin"]
+  date: 2024
+  parent:
+    type: periodical
+    title: Transactions on Machine Learning Research
+
+selvaraju2017:
+  type: article
+  title: "Grad-CAM: Visual explanations from deep networks via gradient-based localization"
+  author: ["Selvaraju, Ramprasaath R.", "Cogswell, Michael", "Das, Abhishek", "Vedantam, Ramakrishna", "Parikh, Devi", "Batra, Dhruv"]
+  date: 2017
+  parent:
+    type: proceedings
+    title: "Proc. IEEE International Conference on Computer Vision (ICCV)"
+  page-range: "618–626"
+
+wightman2019:
+  type: web
+  title: "PyTorch Image Models (timm)"
+  author: "Wightman, Ross"
+  date: 2019
+  url: "https://github.com/huggingface/pytorch-image-models"
+
+loshchilov2019:
+  type: article
+  title: "Decoupled weight decay regularization"
+  author: ["Loshchilov, Ilya", "Hutter, Frank"]
+  date: 2019
+  parent:
+    type: proceedings
+    title: "International Conference on Learning Representations (ICLR)"
+
+szegedy2016:
+  type: article
+  title: "Rethinking the Inception architecture for computer vision"
+  author: ["Szegedy, Christian", "Vanhoucke, Vincent", "Ioffe, Sergey", "Shlens, Jon", "Wojna, Zbigniew"]
+  date: 2016
+  parent:
+    type: proceedings
+    title: "Proc. IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+  page-range: "2818–2826"
