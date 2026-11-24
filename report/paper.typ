@@ -9,7 +9,7 @@
 #set par(justify: true, leading: 0.52em, spacing: 0.62em, first-line-indent: 0em)
 #set heading(numbering: "1.")
 #show heading.where(level: 1): it => block(above: 0.95em, below: 0.5em)[
-  #set text(size: 10.5pt, weight: "bold"); #counter(heading).display() #h(0.3em) #upper(it.body)]
+  #set text(size: 10.5pt, weight: "bold"); #if it.numbering != none [#counter(heading).display() #h(0.3em)] #upper(it.body)]
 #show heading.where(level: 2): it => block(above: 0.7em, below: 0.4em)[
   #set text(size: 9.5pt, weight: "bold", style: "italic"); #it.body]
 #show figure.caption: set text(size: 8pt)
@@ -18,6 +18,7 @@
 #show figure.where(kind: table): set figure.caption(position: top)
 #set table(stroke: none, inset: (x: 3pt, y: 1.8pt))
 #show table: set text(size: 8pt)
+#show table: set par(justify: false)
 #let hline = table.hline(stroke: 0.5pt)
 #show link: set text(fill: rgb("#1f4e9c"))
 
@@ -39,11 +40,13 @@
   classify six skin lesion types from ordinary smartphone photographs. Using the public PAD-UFES-20 dataset
   (2,298 photos, 1,373 patients, all cancers biopsy-proven), we fine-tune three pretrained backbones
   (ResNet-50, ConvNeXt-Tiny and DINOv2 ViT-B/14) under a strict _patient-level_ split, so that no person
-  appears in both training and test data. On held-out patients, ConvNeXt-Tiny performs best with
-  79.3% accuracy, 74.5% balanced accuracy and 0.933 macro AUC, and all models separate malignant from benign
-  lesions with an AUC of about 0.93. The largest model (DINOv2, 86M parameters) is not the most accurate and
-  needs 6.5× the GPU time and energy of ResNet-50. We report GPU utilization, memory and energy for every
-  model, Grad-CAM explanations, results per Fitzpatrick skin type, and the limitations of the data.
+  appears in both training and test data. On held-out patients, ConvNeXt-Tiny gives the best single model
+  (79.3% accuracy, 74.5% balanced accuracy, 0.933 macro AUC). Five-fold cross-validation, however, shows that
+  its balanced accuracy varies by ±3 points between training runs (69.2 ± 3.2%), as much as the gap between
+  architectures; its ranking advantage is stable (macro AUC 0.922 ± 0.005), and an ensemble of the five
+  fold models reaches a macro AUC of 0.940 and a malignant-vs-benign AUC of 0.942. The largest model (DINOv2,
+  86M parameters) is not the most accurate and needs 6.5× the GPU time and energy of ResNet-50. We also report
+  GPU utilization, memory and energy, Grad-CAM explanations, results per skin type, and the data's limitations.
 ]
 #v(0.4em)
 
@@ -163,11 +166,11 @@ with `nvidia-smi`.
 = Results <sec:results>
 == Model comparison
 @tab:results and @fig:comparison summarize test performance on the 329 images of 197 unseen
-patients. ConvNeXt-Tiny is the best model on every multi-class metric, improving balanced accuracy by 8.2
-points over ResNet-50 and 4.7 points over DINOv2. For context, random guessing gives about 17% balanced
-accuracy and always predicting BCC gives 37% accuracy. All three models reach a malignant-vs-benign AUC of
-0.92–0.93: distinguishing cancer from non-cancer is about equally easy for all of them, and the differences
-arise in the finer six-way distinctions.
+patients. In the single-split comparison, ConvNeXt-Tiny is the best model on every multi-class metric
+(balanced accuracy 74.5% vs. 69.8% for DINOv2 and 66.2% for ResNet-50). For context, random guessing gives
+about 17% balanced accuracy and always predicting BCC gives 37% accuracy. All three models reach a
+malignant-vs-benign AUC of 0.92–0.93: separating cancer from non-cancer is about equally easy for all of
+them, and the differences arise in the finer six-way distinctions.
 
 #figure(
   table(
@@ -176,38 +179,86 @@ arise in the finer six-way distinctions.
     hline,
     table.header([*Model*], [*Acc.*], [*Bal. acc.*], [*Macro F1*], [*AUC*], [*Mal. AUC*]),
     hline,
-    [ResNet-50], [0.745], [0.662], [0.677], [0.913], [*0.930*],
+    [ResNet-50], [0.745], [0.662], [0.677], [0.913], [0.930],
     [DINOv2 ViT-B/14], [0.769], [0.698], [0.701], [0.900], [0.915],
-    [ConvNeXt-Tiny], [*0.793*], [*0.745*], [*0.738*], [*0.933*], [0.930],
+    [ConvNeXt-Tiny], [*0.793*], [*0.745*], [*0.738*], [0.933], [0.930],
     hline,
-    [ConvNeXt, 5-fold (mean±sd)], table.cell(colspan: 5, align: center)[#todo[cross-validation results pending]],
+    [ConvNeXt CV mean], [0.737], [0.692], [0.679], [0.922], [0.930],
+    [#h(0.6em) ± std], [±0.066], [±0.032], [±0.048], [±0.005], [±0.008],
+    [ConvNeXt CV ens.], [0.769], [0.709], [0.711], [*0.940*], [*0.942*],
     hline,
   ),
-  caption: [Test results on held-out patients. Mal. AUC: malignant (BCC, MEL, SCC) vs. benign.],
+  caption: [Test results on held-out patients. Mal. AUC: malignant (BCC, MEL, SCC) vs. benign. CV: five
+  ConvNeXt models (ens.: their averaged predictions) trained on different patient folds, each evaluated on the same test set.],
 ) <tab:results>
 
 #figure(
   image("figures/comparison.pdf", width: 100%),
-  caption: [Test balanced accuracy, macro F1 and macro AUC of the three backbones.],
+  caption: [Test scores of the three backbones and the 5-fold cross-validation of ConvNeXt (error bars: ±1 sd).],
 ) <fig:comparison>
 
+== Cross-validation
+To check how stable these numbers are, we retrained ConvNeXt-Tiny five times, each time on a different
+patient-level fold of the training pool, and evaluated every model on the fixed test set. Balanced accuracy
+ranged from 65.4% to 73.1% (mean 69.2 ± 3.2%), so our first run (74.5%) lies at the favourable end. This
+run-to-run spread is as large as the gap between architectures in @tab:results. In contrast, the ranking
+quality is very stable: macro AUC was 0.917–0.927 in every fold, above both ResNet-50 and DINOv2.
+Averaging the probabilities of the five fold models (an ensemble) gives the best AUCs overall: 0.940 macro
+and 0.942 malignant-vs-benign.
+
 == Per-class behaviour
-#todo[Per-class table for ConvNeXt pending.] For ResNet-50, per-class recall is 0.81 (ACK), 0.84 (BCC),
-0.71 (MEL, 5 of 7), 0.77 (NEV), 0.59 (SEK) and only *0.25 for SCC* (7 of 28). SCC is mostly confused with
-BCC and ACK, which can look alike in photos and share the same body regions; this is the hardest
-distinction in the dataset.
+@tab:perclass lists per-class recall. BCC, ACK, NEV and SEK are recognized in 77–84% of cases by the stronger
+models, and 5 of the 7 test melanomas are found by every model. *SCC is the hardest class*: the confusion
+matrix (@fig:cm) shows that 39% of SCC cases are predicted as BCC. Both are keratinocyte cancers that can
+look alike in photos and occur on the same sun-exposed areas. ConvNeXt finds 50% of SCC cases, twice as many
+as ResNet-50 and DINOv2.
+
+#figure(
+  table(
+    columns: (auto, auto, auto, auto, auto, auto, auto),
+    align: (left, right, right, right, right, right, right),
+    hline,
+    table.header([*Recall*], [*ACK*], [*BCC*], [*MEL*], [*NEV*], [*SCC*], [*SEK*]),
+    hline,
+    [ResNet-50], [0.81], [*0.84*], [0.71], [0.77], [0.25], [0.59],
+    [DINOv2 ViT-B/14], [*0.84*], [0.83], [0.71], [0.77], [0.21], [*0.82*],
+    [ConvNeXt-Tiny], [0.82], [*0.84*], [0.71], [0.80], [*0.50*], [0.79],
+    [ConvNeXt ensemble], [*0.84*], [0.80], [0.71], [*0.83*], [0.25], [*0.82*],
+    hline,
+  ),
+  caption: [Per-class recall on the test set (104 ACK, 121 BCC, 7 MEL, 35 NEV, 28 SCC, 34 SEK images).],
+) <tab:perclass>
+
+#figure(
+  image("figures/confusion_convnext.png", width: 82%),
+  caption: [Row-normalized confusion matrix of ConvNeXt-Tiny on the test set (counts in brackets).],
+) <fig:cm>
+
+#figure(
+  placement: top, scope: "parent",
+  image("figures/gradcam_convnext.png", width: 100%),
+  caption: [Grad-CAM heatmaps of ConvNeXt-Tiny for test images (title: true / predicted class; red = wrong).
+  For BCC and MEL the model focuses on the lesion; for ACK it often uses the surrounding sun-damaged skin.
+  Some photos contain pen circles drawn before biopsy.],
+) <fig:gradcam>
+
+== Explanations
+Grad-CAM (@fig:gradcam) shows that for BCC, MEL and NEV the model attends to the lesion itself. For ACK the
+heat is often spread over the surrounding skin, which is plausible because actinic keratoses arise in
+chronically sun-damaged skin. Some photos contain pen circles drawn around the lesion before biopsy; since
+biopsy is linked to cancer diagnoses in this dataset, such marks are a potential shortcut.
 
 == Skin type
 For ConvNeXt, balanced accuracy is similar for the two skin types with enough test images, type 2 (137
 images, 0.667) and type 3 (46 images, 0.680). Types 1, 4 and 5 have only 16, 10 and 2 test images, too few for
-conclusions, and type 6 is absent from the test set. The "unknown" group scores highest (0.870), but
-because skin type is missing only for non-cancer lesions, this group contains no cancers at all and
-measures an easier task, not a skin-tone effect.
+conclusions, and type 6 is absent. The "unknown" group scores highest (0.870), but because skin type is
+missing only for non-cancer lesions, this group contains no cancers and measures an easier task, not a
+skin-tone effect.
 
 == Computational cost
 @tab:gpu reports GPU usage. All runs kept the GPU at 90–99% utilization, so data loading was not a
-bottleneck, and memory stayed well below the 24 GB available. DINOv2 needed *6.5× the GPU time and
-6.7× the energy* of ResNet-50 while being less accurate than ConvNeXt-Tiny.
+bottleneck, and memory stayed far below the 24 GB available. DINOv2 needed *6.5× the GPU time and 6.7× the
+energy* of ResNet-50 and about 3× those of ConvNeXt-Tiny, without being more accurate.
 
 #figure(
   table(
@@ -217,37 +268,43 @@ bottleneck, and memory stayed well below the 24 GB available. DINOv2 needed *6.5
     table.header([*Model*], [*GPU time*], [*Util.*], [*Peak mem.*], [*Power*], [*Energy*]),
     hline,
     [ResNet-50], [2.4 min], [90%], [3.7 GB], [65 W], [3.9 Wh],
+    [ConvNeXt-Tiny#super[†]], [5.3 min], [97%], [6.9 GB], [69 W], [7.3 Wh],
     [DINOv2 ViT-B/14], [15.5 min], [99%], [6.6 GB], [71 W], [26.0 Wh],
-    [ConvNeXt-Tiny], table.cell(colspan: 5, align: center)[#todo[pending (from cross-validation log)]],
     hline,
   ),
-  caption: [GPU cost of one training run on the NVIDIA L4 (busy time with utilization above 10%; mean
-  utilization and power while busy).],
+  caption: [GPU cost of one training run (including its test evaluation) on the NVIDIA L4: busy time with
+  utilization above 10%, mean utilization and power while busy. #super[†]Average over the five
+  cross-validation runs (26.6 min, 36.5 Wh in total).],
 ) <tab:gpu>
 
 = Discussion and Limitations
-*Bigger is not better on small data.* The 86M-parameter ViT was outperformed by a 28M-parameter CNN.
-Transformers have weaker built-in assumptions about images (locality, translation equivariance) and usually
-need more data; with about 1,600 training images, the convolutional prior helps. ViTs also tend to benefit
-from more careful fine-tuning, such as layer-wise learning-rate decay, which we did not tune.
+*Single runs can mislead.* The spread between ConvNeXt training runs (±3 points of balanced accuracy) is as
+large as the differences between architectures, so a single train/test split is not enough to rank models
+on this dataset. The cross-validated estimate (69.2%) is the realistic expectation for ConvNeXt; the
+consistently higher AUC is the more reliable sign of its advantage, and ensembling the fold models is a
+cheap way to gain both stability and accuracy.
 
-*Resolution and modern design pay off.* ConvNeXt at 384 px clearly beats ResNet-50 at 224 px for a modest
-extra cost, consistent with fine lesion texture being important.
+*Bigger is not better on small data.* The 86M-parameter ViT did not outperform a 28M-parameter CNN while
+costing about 3× the compute. Transformers have weaker built-in assumptions about images (locality,
+translation equivariance) and usually need more data; with about 1,600 training images the convolutional
+prior helps. ViTs also tend to need more careful fine-tuning (e.g., layer-wise learning-rate decay).
 
-*Limitations.* (1) The test set is small (329 images, 7 melanomas), so differences of 2–3 points, and all
-per-class melanoma numbers, are uncertain; ConvNeXt's 8-point lead over ResNet-50 is robust, its lead over
-DINOv2 less so. (2) Very dark skin (types 5–6) is nearly absent and skin type is missing for 35% of images,
-so fairness across skin tones cannot be properly assessed. (3) All images come from one program in one
-country; we did not test on external data. (4) Each model used a single hyperparameter setting, and we used
-images only, although clinical metadata is known to help @pacheco2020impact. (5) The system is a research
-prototype, not a medical device.
+*Limitations.* (1) The test set is small (329 images, 7 melanomas), so per-class melanoma numbers are very
+uncertain. (2) Due to time, only ConvNeXt was cross-validated; ResNet-50 and DINOv2 are single runs, whose
+own run-to-run spread is likely similar. (3) Very dark skin (types 5–6) is nearly absent and skin type is
+missing for 35% of images, so fairness across skin tones cannot be properly assessed. (4) All images come
+from one program in one country, and pen marks may act as shortcuts; we did not test on external data.
+(5) Each model used one hyperparameter setting, and we used images only, although clinical metadata is
+known to help @pacheco2020impact. (6) The system is a research prototype, not a medical device.
 
 = Conclusion
-Under a strict patient-level protocol, a fine-tuned ConvNeXt-Tiny classifies six skin lesion types from
-smartphone photos with 74.5% balanced accuracy and separates malignant from benign lesions with an AUC of
-0.93, outperforming both a classic CNN and a much larger Vision Transformer at a fraction of the latter's
-compute. Future work: adding clinical metadata, layer-wise fine-tuning for ViTs, and external validation on
-more diverse skin types (e.g., Fitzpatrick17k @groh2021 and DDI @daneshjou2022).
+Under a strict patient-level protocol, fine-tuned pretrained models classify six skin lesion types from
+smartphone photos with about 70% balanced accuracy and separate malignant from benign lesions with an AUC
+of 0.93; an ensemble of five ConvNeXt-Tiny models reaches 0.94. ConvNeXt-Tiny offered the best balance of
+accuracy, ranking quality and compute, whereas the much larger DINOv2 ViT gave no gain at about 3× the cost.
+Cross-validation proved essential: run-to-run variance was as large as the differences between models.
+Future work: adding clinical metadata, cross-validating all models, better ViT fine-tuning, and external
+validation on more diverse skin types (e.g., Fitzpatrick17k @groh2021 and DDI @daneshjou2022).
 
 #[#set par(justify: false)
 *Code and data availability.* Code, configurations, results and GPU logs:
@@ -256,5 +313,5 @@ Dataset: PAD-UFES-20, #link("https://data.mendeley.com/datasets/zr7vgbcyr2")[dat
 (CC BY 4.0); our script `scripts/download_data.py` downloads it and verifies it against the official checksum.]
 
 #set text(size: 7.5pt)
-#show bibliography: set heading(numbering: none)
-#bibliography("refs.yml", title: "References", style: "ieee")
+#heading(numbering: none)[References]
+#bibliography("refs.yml", title: none, style: "ieee")

@@ -34,25 +34,26 @@ def load_metrics(run, fallback):
 
 
 def fig_comparison():
-    fig, ax = plt.subplots(figsize=(3.4, 1.9))
+    fig, ax = plt.subplots(figsize=(3.4, 2.0))
     x = np.arange(len(METRICS))
-    w = 0.26
-    colors = ["#9aa5b1", "#6c8ebf", "#d67f3c"]
-    for i, (label, (run, fb)) in enumerate(RUNS.items()):
-        m = load_metrics(run, fb)
-        vals = [m[k] for k, _ in METRICS]
-        bars = ax.bar(x + (i - 1) * w, vals, w, label=label.replace("\n", " "), color=colors[i])
-        for b, v in zip(bars, vals):
-            ax.text(b.get_x() + b.get_width() / 2, v + 0.008, f"{v:.2f}", ha="center", fontsize=6)
+    series = [(label.replace("\n", " "), [load_metrics(run, fb)[k] for k, _ in METRICS], None)
+              for label, (run, fb) in RUNS.items()]
     cv = RES / "cv_convnext_tiny_384.json"
-    if cv.exists():  # mark the 5-fold CV mean ± std of ConvNeXt on the test set
+    if cv.exists():  # 5-fold CV of ConvNeXt on the fixed test set: mean ± std
         c = json.loads(cv.read_text())["test"]
-        ax.errorbar(x + w, [c[k]["mean"] for k, _ in METRICS], yerr=[c[k]["std"] for k, _ in METRICS],
-                    fmt="none", ecolor="black", capsize=2, lw=0.8)
+        series.append(("ConvNeXt-T, 5-fold mean ± sd",
+                       [c[k]["mean"] for k, _ in METRICS], [c[k]["std"] for k, _ in METRICS]))
+    colors = ["#9aa5b1", "#6c8ebf", "#d67f3c", "#f2c094"]
+    w = 0.8 / len(series)
+    for i, (label, vals, err) in enumerate(series):
+        pos = x + (i - (len(series) - 1) / 2) * w
+        ax.bar(pos, vals, w, yerr=err, capsize=1.5, error_kw={"lw": 0.7}, label=label, color=colors[i])
+        for p, v, e in zip(pos, vals, err or [0] * len(vals)):
+            ax.text(p, v + e + 0.008, f"{v:.2f}", ha="center", fontsize=5)
     ax.set_xticks(x, [n for _, n in METRICS])
-    ax.set_ylim(0.5, 1.0)
+    ax.set_ylim(0.5, 1.02)
     ax.set_ylabel("Test score")
-    ax.legend(fontsize=6, frameon=False, loc="upper left", ncol=1)
+    ax.legend(fontsize=5.5, frameon=False, loc="upper left", ncol=1)
     fig.savefig(FIG / "comparison.pdf")
     fig.savefig(FIG / "comparison.png")
     plt.close(fig)
@@ -68,6 +69,9 @@ def copy_if_exists(src, name):
 if __name__ == "__main__":
     fig_comparison()
     copy_if_exists(RES / "convnext_tiny_384" / "eval_test" / "confusion_matrix.png", "confusion_convnext.png")
-    copy_if_exists(RES / "convnext_tiny_384" / "eval_test" / "gradcam.png", "gradcam_convnext.png")
-    copy_if_exists(RES / "gpu_log_dinov2.png", "gpu_dinov2.png")
+    cam = RES / "convnext_tiny_384" / "eval_test" / "gradcam.png"
+    if cam.exists():  # keep the first two rows (ACK, BCC, MEL examples) to save space
+        from PIL import Image
+        im = Image.open(cam)
+        im.crop((0, 50, im.width, 713)).save(FIG / "gradcam_convnext.png")
     print("Figures in", FIG, ":", sorted(p.name for p in FIG.iterdir()))

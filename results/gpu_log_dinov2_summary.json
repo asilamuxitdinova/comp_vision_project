@@ -1,0 +1,12 @@
+{
+  "log_duration_min": 40.0,
+  "busy_duration_min": 15.5,
+  "gpu_util_mean_busy_pct": 98.6,
+  "gpu_util_p95_pct": 100.0,
+  "memory_peak_mib": 6756,
+  "memory_total_mib": 23034,
+  "power_mean_busy_w": 71.1,
+  "power_peak_w": 75.6,
+  "energy_wh": 26.0,
+  "temperature_peak_c": 80
+}

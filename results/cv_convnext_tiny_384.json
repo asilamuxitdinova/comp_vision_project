@@ -1,0 +1,69 @@
+{
+  "prefix": "convnext_tiny_384",
+  "folds": [
+    "convnext_tiny_384_fold0",
+    "convnext_tiny_384_fold1",
+    "convnext_tiny_384_fold2",
+    "convnext_tiny_384_fold3",
+    "convnext_tiny_384_fold4"
+  ],
+  "val": {
+    "accuracy": {
+      "mean": 0.7191601761795894,
+      "std": 0.04166337381875361
+    },
+    "balanced_accuracy": {
+      "mean": 0.6946759926652483,
+      "std": 0.02535852523470576
+    },
+    "macro_f1": {
+      "mean": 0.6751524481591711,
+      "std": 0.015620009178420602
+    },
+    "macro_auc": {
+      "mean": 0.913893410781025,
+      "std": 0.014462445829970642
+    },
+    "malignant_vs_benign_auc": {
+      "mean": 0.9241549108239591,
+      "std": 0.01592849645161702
+    }
+  },
+  "test": {
+    "accuracy": {
+      "mean": 0.7373860182370822,
+      "std": 0.06567037945680924
+    },
+    "balanced_accuracy": {
+      "mean": 0.6916475013400147,
+      "std": 0.03176031587389748
+    },
+    "macro_f1": {
+      "mean": 0.6792709655148089,
+      "std": 0.047837058907056425
+    },
+    "macro_auc": {
+      "mean": 0.9222812721992382,
+      "std": 0.004959632547326522
+    },
+    "malignant_vs_benign_auc": {
+      "mean": 0.9300207499629465,
+      "std": 0.008112966304488507
+    }
+  },
+  "test_ensemble": {
+    "accuracy": 0.7689969604863222,
+    "balanced_accuracy": 0.7090963181203823,
+    "macro_f1": 0.7111223719787115,
+    "macro_auc": 0.9398242230152349,
+    "malignant_vs_benign_auc": 0.9421965317919074,
+    "per_class_recall": {
+      "ACK": 0.837,
+      "BCC": 0.802,
+      "MEL": 0.714,
+      "NEV": 0.829,
+      "SCC": 0.25,
+      "SEK": 0.824
+    }
+  }
+}

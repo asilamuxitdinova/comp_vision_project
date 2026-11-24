@@ -1,7 +1,8 @@
 # Results and Discussion
 
 Skin-lesion classification on PAD-UFES-20 with three pretrained backbones, fine-tuned on an
-NVIDIA L4 GPU. All numbers are from a single patient-level train/val/test split (seed 42).
+NVIDIA L4 GPU. Main numbers are from a patient-level train/val/test split (seed 42); ConvNeXt-Tiny was also
+5-fold cross-validated. The 4-page paper is in `report/report.pdf`.
 
 ## 1. Setup
 
@@ -59,6 +60,14 @@ Test-set class counts:
 | **ConvNeXt-Tiny @ 384** | **79.3%** | **74.5%** | **0.738** | **0.933** | 0.930 |
 | DINOv2 ViT-B/14 @ 392 | 76.9% | 69.8% | 0.701 | 0.900 | 0.915 |
 | ResNet-50 @ 224 | 74.5% | 66.2% | 0.677 | 0.913 | 0.930 |
+| ConvNeXt-Tiny, 5-fold CV mean ± std | 73.7 ± 6.6% | 69.2 ± 3.2% | 0.679 ± 0.048 | 0.922 ± 0.005 | 0.930 ± 0.008 |
+| ConvNeXt-Tiny, 5-fold ensemble | 77.0% | 70.9% | 0.711 | **0.940** | **0.942** |
+
+**Cross-validation.** ConvNeXt-Tiny was retrained 5 times on different patient-level folds of the
+train+val pool and each model was evaluated on the same test set. Balanced accuracy per fold:
+0.654, 0.677, 0.717, 0.679, 0.731. The first single run (0.745) lies at the favourable end, so
+**69.2% is the realistic estimate**. Macro AUC is stable (0.917–0.927 in every fold). The ensemble
+averages the five models' probabilities.
 
 - **Balanced accuracy** = average recall over the 6 classes; the main metric, because plain
   accuracy rewards predicting the common classes (BCC, ACK).
@@ -77,8 +86,16 @@ Test-set class counts:
 | SCC | 0.467 | **0.250** | 0.326 | 28 |
 | SEK | 0.667 | 0.588 | 0.625 | 34 |
 
-> TODO: add the same table for ConvNeXt-Tiny and DINOv2 from
-> `outputs/<run>/eval_test/per_class.json` (or the training log).
+### Per-class recall: all models
+
+| Model | ACK | BCC | MEL | NEV | SCC | SEK |
+|---|---|---|---|---|---|---|
+| ResNet-50 | 0.81 | 0.84 | 0.71 | 0.77 | 0.25 | 0.59 |
+| DINOv2 ViT-B/14 | 0.84 | 0.83 | 0.71 | 0.77 | 0.21 | 0.82 |
+| ConvNeXt-Tiny | 0.82 | 0.84 | 0.71 | 0.80 | **0.50** | 0.79 |
+| ConvNeXt ensemble | 0.84 | 0.80 | 0.71 | 0.83 | 0.25 | 0.82 |
+
+ConvNeXt confusion matrix: 39% of SCC cases are predicted as BCC.
 
 ### Results by Fitzpatrick skin type (accuracy / balanced accuracy)
 
@@ -94,13 +111,13 @@ Test-set class counts:
 ## 3. GPU usage during training
 
 Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_log.py`
-(charts: `outputs/gpu_log_resnet50.png`, `outputs/gpu_log_dinov2.png`).
+(charts in `results/`: `gpu_log_resnet50.png`, `gpu_log_dinov2.png`, `gpu_log_convnext_tiny_384_cv.png`).
 
 | Model | GPU busy time | Mean GPU use (busy) | Peak memory | Mean power (busy) | Peak power | Energy | Peak temp. |
 |---|---|---|---|---|---|---|---|
 | ResNet-50 @ 224 | 2.4 min | 90.1% | 3.7 GB (16%) | 65.2 W | 77.0 W | 3.9 Wh | 80 °C |
 | DINOv2 ViT-B/14 @ 392 | 15.5 min | 98.6% | 6.6 GB (29%) | 71.1 W | 75.6 W | 26.0 Wh | 80 °C |
-| ConvNeXt-Tiny @ 384 | *not logged* | | | | | | |
+| ConvNeXt-Tiny @ 384 (avg. of 5 CV runs) | 5.3 min | 96.7% | 6.9 GB (30%) | 68.7 W | 75.8 W | 7.3 Wh | 81 °C |
 
 - "Busy time" counts seconds with GPU use above 10%. The total log length (5.1 and 40 min)
   also includes idle time before and after training, so busy time is the fair comparison.
@@ -113,10 +130,12 @@ Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_l
 
 ## 4. Discussion
 
-1. **ConvNeXt-Tiny wins on every main metric** while being about 3× smaller than DINOv2
-   (≈28M vs ≈86M parameters). It also reached its best validation score earliest (epoch 12).
+1. **ConvNeXt-Tiny is the best single model** while being about 3× smaller than DINOv2
+   (27.8M vs ≈86M parameters). Cross-validation shows its balanced accuracy varies by ±3 points
+   between runs (69.2 ± 3.2%), so its lead in accuracy is not certain, but its higher macro AUC
+   holds in every fold, and the 5-fold ensemble gives the best AUCs (0.940 / 0.942).
 2. **The biggest model was not the best.** DINOv2 used about **6.5× the GPU time and energy**
-   of ResNet-50 (15.5 vs 2.4 min, 26 vs 3.9 Wh) and still scored below ConvNeXt.
+   of ResNet-50 (15.5 vs 2.4 min, 26 vs 3.9 Wh) and about 3× that of ConvNeXt, without being more accurate.
    Vision Transformers generally need more data than CNNs; with ~1,600 training images, the
    built-in assumptions of convolutions (local patterns, textures) help more. ViTs also tend
    to need more careful fine-tuning (for example lower learning rates for early layers),
@@ -138,9 +157,11 @@ Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_l
 
 ## 5. Limitations
 
-- **Single train/test split.** With 329 test images (7 melanomas), differences of 2–3 points
-  may be partly chance. ConvNeXt's lead over ResNet-50 (8 points of balanced accuracy) is
-  convincing; its lead over DINOv2 (5 points) is less certain.
+- **Run-to-run variance.** 5-fold CV of ConvNeXt shows ±3 points of balanced accuracy between
+  training runs, as large as the gaps between architectures. Only ConvNeXt was cross-validated;
+  ResNet-50 and DINOv2 are single runs.
+- **Possible shortcut.** Grad-CAM shows some photos contain pen circles drawn before biopsy,
+  which correlate with cancer diagnoses.
 - **Small and imbalanced dataset**: per-class results for MEL (7 test images) and SCC
   (28) are noisy.
 - **Limited skin-tone diversity**: 35% of images have no skin type recorded, and types 5–6
@@ -151,14 +172,12 @@ Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_l
 
 ## 6. Future work
 
-- 5-fold cross-validation to report mean ± standard deviation:
-  `python -m src.train --config configs/default.yaml --fold k` for k = 0–4.
+- Cross-validate ResNet-50 and DINOv2 too (`CONFIG=configs/resnet50.yaml bash scripts/run_cv.sh`).
 - Better ViT fine-tuning: layer-wise learning-rate decay, longer training, lower LR.
 - Add the clinical metadata (age, lesion region, itching, bleeding, growth) to the image
   model; published work on PAD-UFES-20 reports gains from this.
 - External test set (for example Fitzpatrick17k or DDI) to check generalization and skin-tone
   fairness.
-- Log GPU usage for ConvNeXt-Tiny to complete the cost comparison.
 
 ## 7. How to reproduce
 

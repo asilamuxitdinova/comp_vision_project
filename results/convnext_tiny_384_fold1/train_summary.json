@@ -1,0 +1,17 @@
+{
+  "best_epoch": 17,
+  "best_val_balanced_accuracy": 0.6523206582222562,
+  "best_val_metrics": {
+    "accuracy": 0.7455470737913485,
+    "balanced_accuracy": 0.6523206582222562,
+    "macro_f1": 0.6599558651213503,
+    "weighted_f1": 0.7266453351627132,
+    "log_loss": 0.8292734622955322,
+    "macro_auc": 0.8985691070066308,
+    "malignant_vs_benign_auc": 0.9335574476922278
+  },
+  "epochs_run": 24,
+  "train_time_min": 7.389096069335937,
+  "params_m": 27.824742,
+  "fold": 1
+}
