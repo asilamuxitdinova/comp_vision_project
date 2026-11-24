@@ -25,7 +25,7 @@
 #align(center)[
   #text(size: 15pt, weight: "bold")[Patient-Level Evaluation of Transfer Learning for\ Skin Lesion Classification from Smartphone Photos]
   #v(0.5em)
-  #text(size: 10pt)[#todo[Your Name] #h(0.4em) (Student ID: #todo[XXXXXXX])] \
+  #text(size: 10pt)[Asila Muxitdinova (230009) #h(1.5em) Tanja Schmidt (260550)] \
   #text(size: 9pt)[Computer Vision course project, New Uzbekistan University, November 2026] \
   #text(size: 8.5pt)[Code: #link("https://github.com/asilamuxitdinova/comp_vision_project")[github.com/asilamuxitdinova/comp_vision_project]]
 ]

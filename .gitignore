@@ -4,6 +4,19 @@ outputs/
 *.pt
 *.pth
 
+# Stray logs and archives (keep collected results in results/ instead)
+/gpu_log*.csv
+/gpu_log*.png
+*.log
+nohup.out
+*.zip
+*.tar.gz
+
+# Secrets and caches (never commit tokens)
+.env
+.cache/
+.huggingface/
+
 # Python
 __pycache__/
 *.pyc
