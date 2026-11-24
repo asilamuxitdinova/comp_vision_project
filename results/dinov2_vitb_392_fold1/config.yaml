@@ -1,0 +1,26 @@
+seed: 42
+run_name: dinov2_vitb_392
+data:
+  processed_dir: data/processed
+  img_size: 392
+  num_workers: 8
+model:
+  name: vit_base_patch14_dinov2.lvd142m
+  pretrained: true
+  drop_rate: 0.1
+  drop_path_rate: 0.1
+train:
+  epochs: 30
+  batch_size: 16
+  lr: 2.0e-05
+  weight_decay: 0.05
+  warmup_epochs: 3
+  label_smoothing: 0.1
+  class_weights: sqrt_inverse
+  amp: bf16
+  grad_clip: 1.0
+  early_stopping_patience: 7
+  monitor: balanced_accuracy
+eval:
+  tta: true
+  gradcam_images: 24

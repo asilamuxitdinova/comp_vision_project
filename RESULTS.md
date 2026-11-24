@@ -1,8 +1,8 @@
 # Results and Discussion
 
 Skin-lesion classification on PAD-UFES-20 with three pretrained backbones, fine-tuned on an
-NVIDIA L4 GPU. Main numbers are from a patient-level train/val/test split (seed 42); ConvNeXt-Tiny was also
-5-fold cross-validated. The 4-page paper is in `report/report.pdf`.
+NVIDIA L4 GPU. Numbers come from a patient-level train/val/test split (seed 42), and every model was
+also 5-fold cross-validated (15 extra training runs, all evaluated on the same test set). The 4-page paper is in `report/report.pdf`.
 
 ## 1. Setup
 
@@ -57,17 +57,35 @@ Test-set class counts:
 
 | Model | Accuracy | Balanced accuracy | Macro F1 | Macro AUC | Malignant vs. benign AUC |
 |---|---|---|---|---|---|
+| *Single run (main split)* | | | | | |
 | **ConvNeXt-Tiny @ 384** | **79.3%** | **74.5%** | **0.738** | **0.933** | 0.930 |
 | DINOv2 ViT-B/14 @ 392 | 76.9% | 69.8% | 0.701 | 0.900 | 0.915 |
 | ResNet-50 @ 224 | 74.5% | 66.2% | 0.677 | 0.913 | 0.930 |
-| ConvNeXt-Tiny, 5-fold CV mean ± std | 73.7 ± 6.6% | 69.2 ± 3.2% | 0.679 ± 0.048 | 0.922 ± 0.005 | 0.930 ± 0.008 |
-| ConvNeXt-Tiny, 5-fold ensemble | 77.0% | 70.9% | 0.711 | **0.940** | **0.942** |
+| *5-fold CV, mean ± std* | | | | | |
+| **ConvNeXt-Tiny** | 73.7 ± 6.6% | **69.2 ± 3.2%** | **0.679 ± 0.048** | **0.922 ± 0.005** | **0.930 ± 0.008** |
+| DINOv2 ViT-B/14 | 74.0 ± 2.2% | 66.6 ± 2.1% | 0.674 ± 0.030 | 0.916 ± 0.011 | 0.924 ± 0.017 |
+| ResNet-50 | 73.9 ± 1.5% | 66.6 ± 2.5% | 0.679 ± 0.026 | 0.913 ± 0.009 | 0.928 ± 0.007 |
+| *Ensemble of the 5 fold models* | | | | | |
+| **ConvNeXt-Tiny** | **77.0%** | **70.9%** | **0.711** | **0.940** | **0.942** |
+| DINOv2 ViT-B/14 | 76.3% | 68.7% | 0.700 | 0.930 | 0.938 |
+| ResNet-50 | 74.5% | 67.1% | 0.688 | 0.929 | 0.937 |
 
-**Cross-validation.** ConvNeXt-Tiny was retrained 5 times on different patient-level folds of the
-train+val pool and each model was evaluated on the same test set. Balanced accuracy per fold:
-0.654, 0.677, 0.717, 0.679, 0.731. The first single run (0.745) lies at the favourable end, so
-**69.2% is the realistic estimate**. Macro AUC is stable (0.917–0.927 in every fold). The ensemble
-averages the five models' probabilities.
+**Cross-validation.** Each model was retrained 5 times on different patient-level folds of the
+train+val pool, and each of the 15 models was evaluated on the same test set. Balanced accuracy per fold:
+
+| Fold | 0 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|---|
+| ConvNeXt-Tiny | 0.654 | 0.677 | 0.717 | 0.679 | 0.731 |
+| DINOv2 ViT-B/14 | 0.677 | 0.668 | 0.689 | 0.634 | 0.661 |
+| ResNet-50 | 0.675 | 0.646 | 0.680 | 0.694 | 0.633 |
+
+- The first single runs of ConvNeXt (0.745) and DINOv2 (0.698) lie at the favourable end, so the
+  **CV means are the realistic estimates**.
+- Run-to-run spread (±2–3 points) is as large as the gaps between models. In the single runs DINOv2
+  seemed 3.6 points better than ResNet-50; with CV they are equal (66.6% each).
+- Fold by fold, ConvNeXt has a higher macro AUC than ResNet-50 in 5 of 5 folds and a higher balanced
+  accuracy than DINOv2 in 4 of 5 folds: a consistent but modest lead (about one standard deviation).
+- Averaging the five models' probabilities (ensemble) improves every backbone.
 
 - **Balanced accuracy** = average recall over the 6 classes; the main metric, because plain
   accuracy rewards predicting the common classes (BCC, ACK).
@@ -93,6 +111,8 @@ averages the five models' probabilities.
 | ResNet-50 | 0.81 | 0.84 | 0.71 | 0.77 | 0.25 | 0.59 |
 | DINOv2 ViT-B/14 | 0.84 | 0.83 | 0.71 | 0.77 | 0.21 | 0.82 |
 | ConvNeXt-Tiny | 0.82 | 0.84 | 0.71 | 0.80 | **0.50** | 0.79 |
+| ResNet-50 ensemble | 0.79 | 0.84 | 0.71 | 0.83 | 0.21 | 0.65 |
+| DINOv2 ensemble | 0.83 | 0.84 | 0.71 | 0.80 | 0.18 | 0.77 |
 | ConvNeXt ensemble | 0.84 | 0.80 | 0.71 | 0.83 | 0.25 | 0.82 |
 
 ConvNeXt confusion matrix: 39% of SCC cases are predicted as BCC.
@@ -111,16 +131,21 @@ ConvNeXt confusion matrix: 39% of SCC cases are predicted as BCC.
 ## 3. GPU usage during training
 
 Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_log.py`
-(charts in `results/`: `gpu_log_resnet50.png`, `gpu_log_dinov2.png`, `gpu_log_convnext_tiny_384_cv.png`).
+(charts in `results/`: `gpu_log_resnet50_224_cv.png`, `gpu_log_dinov2_vitb_392_cv.png`,
+`gpu_log_convnext_tiny_384_cv.png`; the single-run logs `gpu_log_resnet50.png`, `gpu_log_dinov2.png` too).
 
-| Model | GPU busy time | Mean GPU use (busy) | Peak memory | Mean power (busy) | Peak power | Energy | Peak temp. |
+Per training run, averaged over the 5 cross-validation runs of each model:
+
+| Model | GPU busy time | Mean GPU use (busy) | Peak memory | Mean power (busy) | Peak power | Energy (busy) | Peak temp. |
 |---|---|---|---|---|---|---|---|
-| ResNet-50 @ 224 | 2.4 min | 90.1% | 3.7 GB (16%) | 65.2 W | 77.0 W | 3.9 Wh | 80 °C |
-| DINOv2 ViT-B/14 @ 392 | 15.5 min | 98.6% | 6.6 GB (29%) | 71.1 W | 75.6 W | 26.0 Wh | 80 °C |
-| ConvNeXt-Tiny @ 384 (avg. of 5 CV runs) | 5.3 min | 96.7% | 6.9 GB (30%) | 68.7 W | 75.8 W | 7.3 Wh | 81 °C |
+| ResNet-50 @ 224 | 1.8 min | 89.4% | 3.7 GB (16%) | 64.6 W | 76.0 W | 1.9 Wh | 81 °C |
+| ConvNeXt-Tiny @ 384 | 5.3 min | 96.7% | 6.9 GB (30%) | 68.7 W | 75.8 W | 6.1 Wh | 81 °C |
+| DINOv2 ViT-B/14 @ 392 | 14.8 min | 98.4% | 6.6 GB (29%) | 71.0 W | 76.4 W | 17.6 Wh | 82 °C |
 
-- "Busy time" counts seconds with GPU use above 10%. The total log length (5.1 and 40 min)
-  also includes idle time before and after training, so busy time is the fair comparison.
+All 15 CV runs together: 110 GPU-minutes of training.
+
+- "Busy time" counts seconds with GPU use above 10%; energy (busy) = busy time × mean busy power.
+  The `energy_wh` field in the `*_summary.json` files also includes idle time between runs.
 - **The GPU was the bottleneck, not data loading**: 90–99% utilization while training.
 - **Memory headroom was large**: even the ViT at 392 px used under a third of the 23 GB.
 - **Power sat at the card's 72 W limit** during training; short peaks slightly above it are
@@ -130,19 +155,21 @@ Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_l
 
 ## 4. Discussion
 
-1. **ConvNeXt-Tiny is the best single model** while being about 3× smaller than DINOv2
-   (27.8M vs ≈86M parameters). Cross-validation shows its balanced accuracy varies by ±3 points
-   between runs (69.2 ± 3.2%), so its lead in accuracy is not certain, but its higher macro AUC
-   holds in every fold, and the 5-fold ensemble gives the best AUCs (0.940 / 0.942).
-2. **The biggest model was not the best.** DINOv2 used about **6.5× the GPU time and energy**
-   of ResNet-50 (15.5 vs 2.4 min, 26 vs 3.9 Wh) and about 3× that of ConvNeXt, without being more accurate.
+1. **ConvNeXt-Tiny is the best model** in the single run, over CV and as an ensemble, while being about
+   3× smaller than DINOv2 (27.8M vs 86.1M parameters). Its lead (69.2% vs 66.6% balanced accuracy) is
+   about one standard deviation, so it is consistent but not statistically certain; its 5-fold
+   ensemble gives the best AUCs (0.940 / 0.942).
+2. **The biggest model was not the best.** DINOv2 used about **8× the GPU time and 9× the energy**
+   of ResNet-50 (14.8 vs 1.8 min, 17.6 vs 1.9 Wh per run) and about 3× that of ConvNeXt, without being
+   more accurate: over CV it ties with ResNet-50 (66.6% balanced accuracy).
    Vision Transformers generally need more data than CNNs; with ~1,600 training images, the
    built-in assumptions of convolutions (local patterns, textures) help more. ViTs also tend
    to need more careful fine-tuning (for example lower learning rates for early layers),
    which was not done here.
-3. **Malignant vs. benign is about equally easy for all three models** (AUC 0.92–0.93).
+3. **Malignant vs. benign is about equally easy for all three models** (AUC 0.92–0.94).
    The differences come from the harder 6-class distinctions.
-4. **SCC is the hardest class**: ResNet-50 found only 25% of SCC cases (7 of 28). SCC is
+4. **SCC is the hardest class**: the ensembles find only 18–25% of SCC cases (ConvNeXt's first run
+   found 50%, an outlier). SCC is
    typically confused with BCC and ACK, which can look very similar in photos.
 5. **Ranking is strong even when the top prediction is wrong**: macro AUC ≥ 0.90 for all
    models, so predicted probabilities are useful for triage (flagging likely cancers for a
@@ -157,9 +184,9 @@ Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_l
 
 ## 5. Limitations
 
-- **Run-to-run variance.** 5-fold CV of ConvNeXt shows ±3 points of balanced accuracy between
-  training runs, as large as the gaps between architectures. Only ConvNeXt was cross-validated;
-  ResNet-50 and DINOv2 are single runs.
+- **Run-to-run variance.** 5-fold CV shows ±2–3 points of balanced accuracy between training runs,
+  as large as the gaps between architectures. Five folds give only a rough estimate, so ConvNeXt's
+  2.6-point lead is suggestive rather than statistically significant.
 - **Possible shortcut.** Grad-CAM shows some photos contain pen circles drawn before biopsy,
   which correlate with cancer diagnoses.
 - **Small and imbalanced dataset**: per-class results for MEL (7 test images) and SCC
@@ -172,7 +199,7 @@ Logged once per second with `nvidia-smi` and summarized with `scripts/plot_gpu_l
 
 ## 6. Future work
 
-- Cross-validate ResNet-50 and DINOv2 too (`CONFIG=configs/resnet50.yaml bash scripts/run_cv.sh`).
+- More folds or repeated cross-validation with different seeds for tighter confidence intervals.
 - Better ViT fine-tuning: layer-wise learning-rate decay, longer training, lower LR.
 - Add the clinical metadata (age, lesion region, itching, bleeding, growth) to the image
   model; published work on PAD-UFES-20 reports gains from this.
@@ -187,6 +214,7 @@ python -m src.train --config configs/default.yaml      # ConvNeXt-Tiny
 python -m src.train --config configs/resnet50.yaml     # ResNet-50
 python -m src.train --config configs/dinov2_vitb.yaml  # DINOv2 ViT-B/14
 python scripts/compare_runs.py                         # results table
+CONFIG=configs/resnet50.yaml bash scripts/run_cv.sh    # 5-fold CV (likewise default.yaml, dinov2_vitb.yaml)
 python scripts/plot_gpu_log.py outputs/gpu_log_<model>.csv   # GPU chart + summary
 ```
 

@@ -15,8 +15,8 @@ Classifies smartphone photos of skin lesions into 6 diagnoses with transfer lear
 > This is a course project. It is not a medical device and must not be used for diagnosis.
 
 **Results:** on held-out patients, ConvNeXt-Tiny reaches 69.2 ± 3.2% balanced accuracy over
-5-fold cross-validation (best single run 74.5%), and a 5-model ensemble reaches 0.940 macro AUC and
-0.942 malignant-vs-benign AUC. See [RESULTS.md](RESULTS.md) and the paper
+5-fold cross-validation (best single run 74.5%), vs. 66.6% for both ResNet-50 and DINOv2 ViT-B/14;
+a 5-model ConvNeXt ensemble reaches 0.940 macro AUC and 0.942 malignant-vs-benign AUC. See [RESULTS.md](RESULTS.md) and the paper
 [report/report.pdf](report/report.pdf).
 
 ## Project layout
@@ -84,7 +84,8 @@ python -m src.train --set train.epochs=2 run_name=smoke
 python -m src.train --config configs/default.yaml --set train.lr=5e-5 train.epochs=40 run_name=cnx_lr5e-5
 
 # 5-fold cross-validation with GPU logging, summary (mean ± std, fold ensemble) and export to results/
-bash scripts/run_cv.sh
+bash scripts/run_cv.sh                                   # ConvNeXt (configs/default.yaml)
+CONFIG=configs/resnet50.yaml bash scripts/run_cv.sh      # any other config
 
 # re-evaluate a checkpoint (e.g. more Grad-CAM images, or without test-time augmentation)
 python -m src.evaluate --checkpoint outputs/convnext_tiny_384/best.pt --gradcam 36

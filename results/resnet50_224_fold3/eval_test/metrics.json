@@ -1,0 +1,13 @@
+{
+  "accuracy": 0.7355623100303952,
+  "balanced_accuracy": 0.6944238470976439,
+  "macro_f1": 0.699548850109609,
+  "weighted_f1": 0.7283679425228882,
+  "log_loss": 0.7967482805252075,
+  "macro_auc": 0.909968620877688,
+  "malignant_vs_benign_auc": 0.9320809248554913,
+  "split": "test",
+  "n": 329,
+  "tta": true,
+  "epoch": 18
+}

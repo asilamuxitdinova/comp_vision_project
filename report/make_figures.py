@@ -19,39 +19,32 @@ FIG.mkdir(parents=True, exist_ok=True)
 plt.rcParams.update({"font.family": "serif", "font.size": 8, "axes.spines.top": False,
                      "axes.spines.right": False, "savefig.bbox": "tight", "savefig.dpi": 300})
 
-# Single-split test results (fallback if results/ has not been collected yet).
-RUNS = {
-    "ResNet-50\n(224 px)": ("resnet50_224", {"balanced_accuracy": .6624, "macro_f1": .6773, "macro_auc": .9128}),
-    "DINOv2 ViT-B/14\n(392 px)": ("dinov2_vitb_392", {"balanced_accuracy": .6978, "macro_f1": .7011, "macro_auc": .8996}),
-    "ConvNeXt-T\n(384 px)": ("convnext_tiny_384", {"balanced_accuracy": .7448, "macro_f1": .7382, "macro_auc": .9332}),
-}
-METRICS = [("balanced_accuracy", "Balanced acc."), ("macro_f1", "Macro F1"), ("macro_auc", "Macro AUC")]
-
-
-def load_metrics(run, fallback):
-    f = RES / run / "eval_test" / "metrics.json"
-    return json.loads(f.read_text()) if f.exists() else fallback
+# 5-fold cross-validation of each backbone, all evaluated on the same fixed test set.
+RUNS = {"ResNet-50 (224 px)": "resnet50_224", "DINOv2 ViT-B/14 (392 px)": "dinov2_vitb_392",
+        "ConvNeXt-T (384 px)": "convnext_tiny_384"}
+METRICS = [("balanced_accuracy", "Balanced\nacc."), ("macro_f1", "Macro\nF1"), ("macro_auc", "Macro\nAUC"),
+           ("malignant_vs_benign_auc", "Malignant\nAUC")]
 
 
 def fig_comparison():
+    """Bars: CV mean +- sd on the test set; diamonds: ensemble of the five fold models."""
     fig, ax = plt.subplots(figsize=(3.4, 2.0))
     x = np.arange(len(METRICS))
-    series = [(label.replace("\n", " "), [load_metrics(run, fb)[k] for k, _ in METRICS], None)
-              for label, (run, fb) in RUNS.items()]
-    cv = RES / "cv_convnext_tiny_384.json"
-    if cv.exists():  # 5-fold CV of ConvNeXt on the fixed test set: mean ± std
-        c = json.loads(cv.read_text())["test"]
-        series.append(("ConvNeXt-T, 5-fold mean ± sd",
-                       [c[k]["mean"] for k, _ in METRICS], [c[k]["std"] for k, _ in METRICS]))
-    colors = ["#9aa5b1", "#6c8ebf", "#d67f3c", "#f2c094"]
-    w = 0.8 / len(series)
-    for i, (label, vals, err) in enumerate(series):
-        pos = x + (i - (len(series) - 1) / 2) * w
-        ax.bar(pos, vals, w, yerr=err, capsize=1.5, error_kw={"lw": 0.7}, label=label, color=colors[i])
-        for p, v, e in zip(pos, vals, err or [0] * len(vals)):
-            ax.text(p, v + e + 0.008, f"{v:.2f}", ha="center", fontsize=5)
+    colors = ["#9aa5b1", "#6c8ebf", "#d67f3c"]
+    w = 0.8 / len(RUNS)
+    for i, (label, run) in enumerate(RUNS.items()):
+        cv = json.loads((RES / f"cv_{run}.json").read_text())
+        mean = [cv["test"][k]["mean"] for k, _ in METRICS]
+        sd = [cv["test"][k]["std"] for k, _ in METRICS]
+        ens = [cv["test_ensemble"][k] for k, _ in METRICS]
+        pos = x + (i - (len(RUNS) - 1) / 2) * w
+        ax.bar(pos, mean, w, yerr=sd, capsize=1.5, error_kw={"lw": 0.7}, label=label, color=colors[i])
+        ax.scatter(pos, ens, marker="D", s=7, color="black", zorder=3,
+                   label="5-fold ensemble" if i == len(RUNS) - 1 else None)
+        for p, m, e, en in zip(pos, mean, sd, ens):
+            ax.text(p, max(m + e, en) + 0.01, f"{m:.2f}", ha="center", fontsize=4.5)
     ax.set_xticks(x, [n for _, n in METRICS])
-    ax.set_ylim(0.5, 1.02)
+    ax.set_ylim(0.5, 1.04)
     ax.set_ylabel("Test score")
     ax.legend(fontsize=5.5, frameon=False, loc="upper left", ncol=1)
     fig.savefig(FIG / "comparison.pdf")

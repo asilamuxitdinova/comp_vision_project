@@ -1,0 +1,69 @@
+{
+  "prefix": "dinov2_vitb_392",
+  "folds": [
+    "dinov2_vitb_392_fold0",
+    "dinov2_vitb_392_fold1",
+    "dinov2_vitb_392_fold2",
+    "dinov2_vitb_392_fold3",
+    "dinov2_vitb_392_fold4"
+  ],
+  "val": {
+    "accuracy": {
+      "mean": 0.7536921507084642,
+      "std": 0.023755640783385087
+    },
+    "balanced_accuracy": {
+      "mean": 0.696631704819026,
+      "std": 0.028231392179417558
+    },
+    "macro_f1": {
+      "mean": 0.6927151633857405,
+      "std": 0.024442122170003674
+    },
+    "macro_auc": {
+      "mean": 0.902944535094662,
+      "std": 0.011503300581932803
+    },
+    "malignant_vs_benign_auc": {
+      "mean": 0.9138788506134243,
+      "std": 0.008330159642698912
+    }
+  },
+  "test": {
+    "accuracy": {
+      "mean": 0.7398176291793312,
+      "std": 0.022086203190984748
+    },
+    "balanced_accuracy": {
+      "mean": 0.6656550312432665,
+      "std": 0.020922404688038885
+    },
+    "macro_f1": {
+      "mean": 0.6739812477997703,
+      "std": 0.029721295890425294
+    },
+    "macro_auc": {
+      "mean": 0.9162718192162773,
+      "std": 0.011325348619578035
+    },
+    "malignant_vs_benign_auc": {
+      "mean": 0.9241662961316139,
+      "std": 0.016511974908175596
+    }
+  },
+  "test_ensemble": {
+    "accuracy": 0.7629179331306991,
+    "balanced_accuracy": 0.6865328076558024,
+    "macro_f1": 0.7001402555419615,
+    "macro_auc": 0.9304211479251202,
+    "malignant_vs_benign_auc": 0.9382688602341781,
+    "per_class_recall": {
+      "ACK": 0.827,
+      "BCC": 0.835,
+      "MEL": 0.714,
+      "NEV": 0.8,
+      "SCC": 0.179,
+      "SEK": 0.765
+    }
+  }
+}
